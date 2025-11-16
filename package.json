@@ -1,0 +1,16 @@
+{
+  "name": "tiktik-live-streaming",
+  "version": "1.0.0",
+  "description": "Complete YouTube-like live streaming platform",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 5000",
+    "start": "python3 -m http.server 5000"
+  },
+  "dependencies": {
+    "firebase": "^10.7.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

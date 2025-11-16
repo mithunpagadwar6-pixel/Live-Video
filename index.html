@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTik - Video Sharing Platform with Live Streaming</title>
+    <meta name="description" content="TikTik - Watch live streams, discover videos, and connect with creators">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff0000">
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-play-circle"></i>
+                <span>TikTik</span>
+            </div>
+        </div>
+        
+        <div class="header-center">
+            <div class="search-container">
+                <input type="text" placeholder="Search videos..." class="search-input" id="searchInput">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <button class="icon-btn" id="createBtn" title="Create">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            
+            <!-- Google Login Button -->
+            <button id="googleLoginBtn" class="btn btn-primary">
+                <i class="fab fa-google"></i> Login
+            </button>
+
+            <!-- Profile Container (hidden until logged in) -->
+            <div id="profile-container" class="profile-container" style="display: none;">
+                <img id="profile-pic" class="profile-pic" src="" alt="Profile" />
+                <div id="profile-menu" class="profile-menu">
+                    <div class="profile-section">
+                        <img id="profile-avatar" class="profile-avatar" src="" alt="Profile" />
+                        <div class="profile-details">
+                            <p id="profile-name" class="profile-name"></p>
+                            <p id="profile-email" class="profile-email"></p>
+                        </div>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <div class="menu-item" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign out</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-page="live">
+                <i class="fas fa-circle live-indicator"></i>
+                <span>Live</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item" data-page="library">
+                <i class="fas fa-folder-open"></i>
+                <span>Your Channel</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Home Page -->
+        <div class="page active" id="homePage">
+            <!-- Live Now Section -->
+            <div class="live-section" id="liveSection">
+                <h2 class="section-title">
+                    <i class="fas fa-circle live-pulse"></i> LIVE Now
+                </h2>
+                <div class="live-grid" id="liveGrid">
+                    <!-- Live streams will be loaded here -->
+                </div>
+            </div>
+
+            <!-- All Videos -->
+            <h2 class="section-title">Recommended</h2>
+            <div class="video-grid" id="videoGrid">
+                <!-- Videos will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Live Page -->
+        <div class="page" id="livePage">
+            <h2>All Live Streams</h2>
+            <div class="live-grid" id="allLiveGrid">
+                <!-- All live streams -->
+            </div>
+        </div>
+
+        <!-- Library/Channel Page -->
+        <div class="page" id="libraryPage">
+            <div class="channel-header">
+                <h1 id="channelName">My Channel</h1>
+                <button class="btn btn-danger" id="goLiveTopBtn">
+                    <i class="fas fa-broadcast-tower"></i> Go Live
+                </button>
+            </div>
+            
+            <div class="channel-tabs">
+                <button class="channel-tab active" data-tab="videos">Videos</button>
+                <button class="channel-tab" data-tab="live">Live</button>
+            </div>
+            
+            <div class="tab-content active" id="videosTab">
+                <div class="my-videos-grid" id="myVideosGrid"></div>
+            </div>
+            
+            <div class="tab-content" id="myLiveTab">
+                <div class="my-videos-grid" id="myLiveGrid"></div>
+            </div>
+        </div>
+
+        <!-- Live Player Page -->
+        <div class="page" id="livePlayerPage">
+            <div class="live-player-container">
+                <div class="live-video-section">
+                    <video id="livePlayer" class="live-player" autoplay playsinline></video>
+                    
+                    <!-- Stream Controls (for streamer only) -->
+                    <div class="stream-controls" id="streamControls" style="display: none;">
+                        <button class="btn btn-danger" id="endStreamBtn">
+                            <i class="fas fa-stop"></i> End Stream
+                        </button>
+                        <button class="btn btn-secondary" id="deleteStreamBtn">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                    
+                    <div class="live-info">
+                        <div class="live-badge">
+                            <i class="fas fa-circle"></i> LIVE
+                        </div>
+                        <h2 id="liveTitle">Live Stream Title</h2>
+                        <div class="live-stats">
+                            <span id="liveViewers">
+                                <i class="fas fa-eye"></i> 0 watching
+                            </span>
+                            <span id="streamUploader"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="live-chat-section">
+                    <div class="chat-header">
+                        <h3>Live Chat</h3>
+                        <span id="chatViewers">0 viewers</span>
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="Say something..." class="chat-input">
+                        <button id="sendChatBtn" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Go Live Modal -->
+    <div class="modal" id="goLiveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-broadcast-tower"></i> Go Live</h2>
+                <button class="close-btn" id="closeGoLiveBtn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="live-preview-container">
+                    <video id="webcamPreview" class="webcam-preview" autoplay muted playsinline></video>
+                    <div class="preview-controls">
+                        <button class="btn btn-secondary" id="toggleWebcamBtn">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="btn btn-secondary" id="toggleMicBtn">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="live-settings">
+                    <div class="form-group">
+                        <label>Stream Title</label>
+                        <input type="text" id="streamTitle" class="form-control" placeholder="Enter stream title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="streamDescription" class="form-control" placeholder="Describe your stream" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Thumbnail (optional)</label>
+                        <input type="file" id="streamThumbnail" class="form-control" accept="image/*">
+                        <div id="thumbnailPreview" class="thumbnail-preview"></div>
+                    </div>
+                    
+                    <div class="stream-info">
+                        <p><strong>Stream Key:</strong> <code id="streamKey">Generating...</code></p>
+                        <button class="btn btn-secondary btn-sm" id="copyStreamKeyBtn">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelGoLiveBtn">Cancel</button>
+                <button class="btn btn-danger" id="startStreamBtn">
+                    <i class="fas fa-circle"></i> Go Live
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Menu Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Create</h2>
+                <button class="close-btn" id="closeCreateBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <button class="create-option" id="uploadVideoOption">
+                    <i class="fas fa-video"></i>
+                    <span>Upload Video</span>
+                </button>
+                <button class="create-option" id="createShortOption">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Create Short</span>
+                </button>
+                <button class="create-option" id="goLiveOption">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Go Live</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

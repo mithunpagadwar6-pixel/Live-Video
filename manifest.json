@@ -1,0 +1,17 @@
+{
+  "name": "TikTik - Live Streaming Platform",
+  "short_name": "TikTik",
+  "description": "Watch live streams, discover videos, and connect with creators",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff0000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ff0000'/%3E%3Cpolygon points='40,35 40,65 65,50' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

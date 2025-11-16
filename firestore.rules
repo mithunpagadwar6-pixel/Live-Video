@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Live Streams collection
+    match /liveStreams/{streamId} {
+      // Anyone can read live streams
+      allow read: if true;
+      
+      // Only authenticated users can create streams
+      allow create: if isSignedIn() 
+        && request.resource.data.uploaderId == request.auth.uid;
+      
+      // Only stream owner can update their stream
+      allow update: if isOwner(resource.data.uploaderId);
+      
+      // Only stream owner can delete their stream
+      allow delete: if isOwner(resource.data.uploaderId);
+    }
+    
+    // Live Chat collection
+    match /liveChats/{chatId} {
+      // Anyone can read chat messages
+      allow read: if true;
+      
+      // Only authenticated users can send messages
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      
+      // Users cannot update chat messages
+      allow update: if false;
+      
+      // Only message owner can delete their message
+      allow delete: if isOwner(resource.data.userId);
+    }
+    
+    // Videos collection (if needed)
+    match /videos/{videoId} {
+      allow read: if true;
+      allow create: if isSignedIn() 
+        && request.resource.data.uploaderId == request.auth.uid;
+      allow update: if isOwner(resource.data.uploaderId);
+      allow delete: if isOwner(resource.data.uploaderId);
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
